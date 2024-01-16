@@ -9,8 +9,6 @@ pub struct UserValues {
     pub money: u32,
     pub rod_name: String,
     pub rod_modifier: Option<String>,
-    // todo: bait
-    pub cast: bool,
     pub has_seen: Vec<String>
 }
 
@@ -36,7 +34,6 @@ impl Default for UserValues {
             money: 0,
             rod_name: "Stick with String".to_string(),
             rod_modifier: None,
-            cast: false,
             has_seen: vec![]
         }
     }
@@ -44,32 +41,6 @@ impl Default for UserValues {
 
 pub fn get_userfile_path() -> String {
     "./data/udat.json".to_string()
-}
-
-pub fn set_userfile_casting_false(path: String) {
-    let raw_path = path.to_string();
-    let path = Path::new(raw_path.as_str());
-
-    if !path.exists() {
-        return;
-    }
-
-    let contents = std::fs::read_to_string(path).unwrap();
-
-    let mut user_values: UserValues = serde_json::from_str(contents.as_str()).unwrap();
-    user_values.cast = false;
-
-    // write the file
-    let serialized = serde_json::to_string(&user_values).unwrap();
-
-    std::fs::write(path, serialized).unwrap();
-}
-
-pub fn userfile_exists() -> bool {
-    let raw_path = get_userfile_path();
-    let path = Path::new(raw_path.as_str());
-
-    path.exists()
 }
 
 pub fn create_userfile() {

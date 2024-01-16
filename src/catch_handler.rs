@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 use chrono::{DateTime, Duration, Local};
 use crate::data::fish::Fish;
+use crate::data::userfile::update_userfile;
 use crate::say;
 
 #[derive(Clone)]
@@ -27,7 +28,6 @@ pub fn reset(data: &mut CatchData) {
     data.cast_time = None;
     data.cast_duration = None;
     data.cast_btn_txt = "Cast rod".to_string();
-    data.display_text = "Click the button to fish!".to_string();
     data.caught = true;
 }
 
@@ -50,6 +50,30 @@ pub fn schedule(data: Arc<Mutex<CatchData>>) {
 
             if current_elapsed < cast_duration {
                 continue;
+            }
+
+            let fish = data.fish.clone().unwrap();
+
+            if data.will_catch {
+                // todo: weight check and turtle check
+
+                let fishdata = crate::data::fish_data();
+                let value = fish.get_value(&fishdata);
+
+                data.display_text = format!("You caught a ${} {} at {}lbs!", value, fish, fish.weight);
+                data.caught = true;
+                // update userfile
+                let mut userfile = crate::read_userfile();
+
+                userfile.fish_caught += 1;
+                userfile.money += value;
+                if !userfile.has_seen.contains(&fish.fish_type.name) {
+                    userfile.has_seen.push(fish.fish_type.name.clone());
+                }
+                update_userfile(userfile);
+            } else {
+                data.display_text = format!("You didn't catch a {}lbs {}", fish.weight, fish);
+                data.caught = false;
             }
 
             reset(&mut data);

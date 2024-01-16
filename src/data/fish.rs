@@ -1,5 +1,4 @@
 use std::fmt::Display;
-use std::path::Path;
 use std::str::FromStr;
 use rand::Rng;
 use crate::data::rods::Rod;
@@ -89,19 +88,6 @@ impl FishRarity {
         }
         Self::Common
     }
-
-    pub fn from_string<S: Into<String>>(rarity: S) -> Option<Self> {
-        let rarity = rarity.into();
-        match rarity.as_str() {
-            "Common" => Some(Self::Common),
-            "Uncommon" => Some(Self::Uncommon),
-            "Rare" => Some(Self::Rare),
-            "Elusive" => Some(Self::Elusive),
-            "Legendary" => Some(Self::Legendary),
-            "Mythical" => Some(Self::Mythical),
-            _ => None,
-        }
-    }
 }
 
 impl FromStr for FishRarity {
@@ -171,14 +157,8 @@ pub struct FishData {
 }
 
 impl FishData {
-
     pub fn get_fish_above_depth(&self, depth: u32) -> Vec<&FishType> {
         self.fish.iter().filter(|fish| fish.depth <= depth).collect()
-    }
-
-    pub fn fish_type_by_name<S: Into<String>>(&self, name: S) -> Option<&FishType> {
-        let name = name.into();
-        self.fish.iter().find(|fish| fish.name == name.as_str())
     }
 }
 
@@ -190,7 +170,6 @@ pub struct Fish {
 }
 
 impl Fish {
-
     pub fn random_fish(fish_data: &FishData, caught_with: &Rod) -> Self {
         let mut rng = rand::thread_rng();
 

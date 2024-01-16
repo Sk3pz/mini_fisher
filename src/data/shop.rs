@@ -212,7 +212,7 @@ impl Shop {
 
         let mut user_file = crate::data::userfile::read_userfile();
 
-        let mut cost = base_rod.cost;
+        let cost = base_rod.cost;
 
         let cost = cost.round() as u32;
 

@@ -13,6 +13,7 @@ use crate::catch_handler::CatchData;
 use crate::data::fish::{Fish, FishData};
 use crate::data::{fish_data, rod_data};
 use crate::data::rods::RodData;
+use crate::data::shop::Shop;
 use crate::data::userfile::read_userfile;
 
 const WEIGHT_ADD_TIME: f32 = 0.05;
@@ -126,7 +127,7 @@ impl eframe::App for MiniFisher {
             self.exit();
         };
 
-        let mut catch_data = self.get_current_catch_data();
+        let catch_data = self.get_current_catch_data();
 
         egui::CentralPanel::default().show(ctx, |ui| {
             self.shop_button_content = if self.show_side_panel {
@@ -198,26 +199,42 @@ impl eframe::App for MiniFisher {
 
             // Show/hide side panel based on button click
             if self.show_side_panel {
+                let mut shop = Shop::load(&self.rod_data);
+
                 SidePanel::right("shop")
                     .resizable(false)
                     .show(ctx, |ui| {
-                    ui.vertical_centered(|ui| {
-                        ui.set_min_size(Vec2::new(395.0, 0.0));
-                        ui.heading("Shop");
-                        // todo: display shop here
-                        ui.spacing_mut().item_spacing.y = 10.0;
-                        // Display 5 cards in the side panel
-                        // todo: replace with shop items
-                        for card_index in 0..6 {
-                            ui.horizontal(|ui| {
-                                // Each "card" is represented by a button
-                                let card_button = ui.button(format!("Card {}", card_index));
-                                if card_button.clicked() {
-                                    // Todo: shop click
+
+                        egui::ScrollArea::vertical().show(ui, |ui| {
+                            ui.vertical_centered(|ui| {
+                                ui.set_min_size(Vec2::new(395.0, 0.0));
+                                ui.heading("Shop");
+                                ui.spacing_mut().item_spacing.y = 10.0;
+
+                                for rod in &shop.rods {
+                                    let rod = self.rod_data.get_base_by_name(rod).unwrap();
+
+                                    egui::Frame::group(ui.style()).show(ui, |ui| {
+                                        ui.vertical(|ui| {
+                                            ui.heading(rod.name.clone());
+                                            ui.label(format!("{}", rod.description));
+                                            ui.label(format!("${}", rod.cost));
+                                        });
+                                        let buy_button = ui.button("Buy");
+                                        if buy_button.clicked() {
+                                            // todo: buy rod
+                                        }
+                                        buy_button.on_hover_text(format!("Rod: {}\nAverage Catch Rate: {}s\n\
+                                        Catch Chance: {}\nDepth: {}ft\nWeight: {}lbs",
+                                                                         rod.name, rod.catch_rate,
+                                                                         rod.catch_chance as u32 / 100, rod.depth,
+                                                                         rod.weight_limit));
+                                    });
                                 }
+
                             });
-                        }
-                    });
+                        });
+
                 });
             }
         });
