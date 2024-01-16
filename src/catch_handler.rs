@@ -69,16 +69,16 @@ pub fn schedule(data: Arc<Mutex<CatchData>>) {
 
             drop(rod_data); // free up the wasted memory
 
+            // check if the fish is too heavy
+            if fish.weight as u32 > rod.get_weight_limit() {
+                data.display_text = format!("Your line broke! The {}lb {} was too heavy!", fish.weight, fish);
+
+                data.caught = false;
+                reset(&mut data);
+                continue;
+            }
+
             if data.will_catch {
-                // check if the fish is too heavy
-                if fish.weight as u32 > rod.get_weight_limit() {
-                    data.display_text = format!("Your line broke! The {}lb {} was too heavy!", fish.weight, fish);
-
-                    data.caught = false;
-                    reset(&mut data);
-                    continue;
-                }
-
                 // turtle event 🐢🐢🐢
                 if thread_rng().gen_range(0..100) >= 1 {
                     data.display_text = format!("🐢 A turtle stole your {}lb {}! 🐢", fish.weight, fish);
