@@ -1,6 +1,5 @@
 use std::fmt::Display;
 use chrono::{Duration, Local, NaiveDateTime};
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use crate::data::rods::{Rod, RodData};
 use crate::say;
@@ -21,16 +20,6 @@ pub enum RodRarity {
 }
 
 impl RodRarity {
-    pub fn get_weight(&self) -> u64 {
-        match self {
-            RodRarity::Common => 4500,
-            RodRarity::Uncommon => 3000,
-            RodRarity::Rare => 2000,
-            RodRarity::Epic => 1000,
-            RodRarity::Unobtainable => 0,
-        }
-    }
-
     pub fn get_ident(&self) -> u8 {
         match self {
             RodRarity::Common => 0,
@@ -39,49 +28,6 @@ impl RodRarity {
             RodRarity::Epic => 3,
             RodRarity::Unobtainable => 4,
         }
-    }
-
-    pub fn is_rarer(&self, other: &Self) -> bool {
-        self.get_ident() > other.get_ident()
-    }
-
-    pub fn from_string<S: Into<String>>(string: S) -> Self {
-        let from = string.into();
-        match from.as_str() {
-            "Common" => RodRarity::Common,
-            "Uncommon" => RodRarity::Uncommon,
-            "Rare" => RodRarity::Rare,
-            "Epic" => RodRarity::Epic,
-            "Unobtainable" => RodRarity::Unobtainable,
-            _ => RodRarity::Common,
-        }
-    }
-
-    pub fn random() -> Self {
-        let mut rng = rand::thread_rng();
-        let num = rng.gen_range(0..10000);
-
-        let mut combined = 0;
-        if num < (combined + RodRarity::Common.get_weight()) {
-            return RodRarity::Common;
-        }
-        combined += RodRarity::Common.get_weight();
-        if num < (combined + RodRarity::Uncommon.get_weight()) {
-            return RodRarity::Uncommon;
-        }
-        combined += RodRarity::Uncommon.get_weight();
-        if num < (combined + RodRarity::Rare.get_weight()) {
-            return RodRarity::Rare;
-        }
-        combined += RodRarity::Rare.get_weight();
-        if num < (combined + RodRarity::Epic.get_weight()) {
-            return RodRarity::Epic;
-        }
-        combined += RodRarity::Epic.get_weight();
-        if num < (combined + RodRarity::Unobtainable.get_weight()) {
-            return RodRarity::Unobtainable;
-        }
-        RodRarity::Common
     }
 }
 

@@ -71,16 +71,6 @@ impl RodData {
 
         rods[rng.gen_range(0..rods.len())].clone()
     }
-
-    pub fn generate_rod(&self, rarity: RodRarity) -> Rod {
-        let base = self.generate_rod_base(rarity);
-        let modifier = self.generate_modifier();
-
-        Rod {
-            base,
-            modifier
-        }
-    }
 }
 
 #[derive(Debug, Clone)]

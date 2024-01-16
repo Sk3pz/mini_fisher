@@ -80,7 +80,7 @@ pub fn schedule(data: Arc<Mutex<CatchData>>) {
 
             if data.will_catch {
                 // turtle event 🐢🐢🐢
-                if thread_rng().gen_range(0..100) >= 1 {
+                if thread_rng().gen_range(0..100) >= 98 {
                     data.display_text = format!("🐢 A turtle stole your {}lb {}! 🐢", fish.weight, fish);
                     data.caught = false;
                     data.was_turtle = true;
