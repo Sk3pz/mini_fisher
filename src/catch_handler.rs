@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 use chrono::{DateTime, Duration, Local};
+use rand::{Rng, thread_rng};
 use crate::data::fish::Fish;
 use crate::data::userfile::update_userfile;
 use crate::say;
@@ -17,6 +18,7 @@ pub struct CatchData {
     pub fish: Option<Fish>,
 
     pub caught: bool,
+    pub was_turtle: bool,
 
     pub running: bool
 }
@@ -28,7 +30,11 @@ pub fn reset(data: &mut CatchData) {
     data.cast_time = None;
     data.cast_duration = None;
     data.cast_btn_txt = "Cast rod".to_string();
-    data.caught = true;
+    say!("Reeled!");
+    if let Some(ctx) = &data.ctx {
+        ctx.request_repaint();
+        data.ctx = None;
+    }
 }
 
 pub fn schedule(data: Arc<Mutex<CatchData>>) {
@@ -36,6 +42,7 @@ pub fn schedule(data: Arc<Mutex<CatchData>>) {
         let mut data = data.lock().unwrap();
 
         if data.cast {
+            data.was_turtle = false;
 
             if data.cast_time.is_none() {
                 data.cast_time = Some(Local::now());
@@ -54,8 +61,32 @@ pub fn schedule(data: Arc<Mutex<CatchData>>) {
 
             let fish = data.fish.clone().unwrap();
 
+            let userfile = crate::read_userfile();
+
+            let rod_data = crate::rod_data();
+
+            let rod = userfile.get_rod(&rod_data);
+
+            drop(rod_data); // free up the wasted memory
+
             if data.will_catch {
-                // todo: weight check and turtle check
+                // check if the fish is too heavy
+                if fish.weight as u32 > rod.get_weight_limit() {
+                    data.display_text = format!("Your line broke! The {}lb {} was too heavy!", fish.weight, fish);
+
+                    data.caught = false;
+                    reset(&mut data);
+                    continue;
+                }
+
+                // turtle event 🐢🐢🐢
+                if thread_rng().gen_range(0..100) >= 1 {
+                    data.display_text = format!("🐢 A turtle stole your {}lb {}! 🐢", fish.weight, fish);
+                    data.caught = false;
+                    data.was_turtle = true;
+                    reset(&mut data);
+                    continue;
+                }
 
                 let fishdata = crate::data::fish_data();
                 let value = fish.get_value(&fishdata);
@@ -72,16 +103,11 @@ pub fn schedule(data: Arc<Mutex<CatchData>>) {
                 }
                 update_userfile(userfile);
             } else {
-                data.display_text = format!("You didn't catch a {}lbs {}", fish.weight, fish);
+                data.display_text = format!("A {}lbs {} got away! Better luck next time!", fish.weight, fish);
                 data.caught = false;
             }
 
             reset(&mut data);
-            say!("Reeled!");
-            if let Some(ctx) = &data.ctx {
-                ctx.request_repaint();
-                data.ctx = None;
-            }
         }
     }
 }

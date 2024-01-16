@@ -97,6 +97,7 @@ impl Display for RodRarity {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum BuyError {
     NoMoney,
     InvalidRod,

@@ -352,6 +352,16 @@ pub fn rod_data() -> RodData {
     RodData {
         rods: vec![
             BaseRod {
+                name: "Pisher Frice Plastic Rod".to_string(),
+                description: "A plastic rod from Uoys R Tus".to_string(),
+                catch_chance: 0.9,
+                catch_rate: 1.0,
+                depth: 100,
+                weight_limit: 1,
+                cost: 0.0,
+                rarity: RodRarity::Unobtainable,
+            },
+            BaseRod {
                 name: "Stick with String".to_string(),
                 description: "A stick with a string tied to it. It gets the job done.".to_string(),
                 catch_chance: 0.32,
@@ -488,21 +498,21 @@ pub fn rod_data() -> RodData {
         modifiers: vec![
             RodModifier {
                 name: "Old".to_string(),
-                catch_rate: 1.5,
+                catch_rate: 3.0,
                 catch_chance: -0.02,
                 depth: -5,
                 weight_limit: -5,
             },
             RodModifier {
                 name: "Better".to_string(),
-                catch_rate: -1.5,
+                catch_rate: -1.0,
                 catch_chance: 0.02,
-                depth: 0,
-                weight_limit: 0,
+                depth: 5,
+                weight_limit: 5,
             },
             RodModifier {
                 name: "Upgraded".to_string(),
-                catch_rate: -2.5,
+                catch_rate: -3.0,
                 catch_chance: 0.2,
                 depth: 20,
                 weight_limit: 20,

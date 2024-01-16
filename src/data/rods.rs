@@ -96,7 +96,7 @@ impl Rod {
             catch_rate += m.catch_rate;
         }
 
-        catch_rate as u32
+        (catch_rate as u32).max(2)
     }
 
     pub fn get_catch_chance(&self) -> u32 {
