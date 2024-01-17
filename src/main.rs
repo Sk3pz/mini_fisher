@@ -31,6 +31,8 @@ struct MiniFisher {
     catch_data_ref: Arc<Mutex<CatchData>>,
 
     dark_theme: bool,
+
+    cached_catch_data: Option<CatchData>,
 }
 
 impl MiniFisher {
@@ -67,11 +69,9 @@ impl MiniFisher {
             catch_data_ref,
 
             dark_theme: true,
-        }
-    }
 
-    fn get_current_catch_data(&self) -> CatchData {
-        self.catch_data_ref.lock().unwrap().clone()
+            cached_catch_data: None,
+        }
     }
 
     fn cast_rod(&mut self) {
@@ -96,7 +96,7 @@ impl MiniFisher {
 
         // set the cast duration
         let weight_catch_time_add = (fish.weight - fish.fish_type.avg_weight as f32) * WEIGHT_ADD_TIME;
-        let duration = ((rod.random_catch_time() + weight_catch_time_add)) as i64;
+        let duration = (rod.random_catch_time() + weight_catch_time_add) as i64;
 
         catch_data.cast_duration = Some(Duration::seconds(duration));
 
@@ -140,7 +140,15 @@ impl eframe::App for MiniFisher {
             self.exit();
         };
 
-        let catch_data = self.get_current_catch_data();
+        let catch_data = if let Ok(cd) = self.catch_data_ref.try_lock() {
+            cd.clone()
+        } else {
+            if let Some(c) = &self.cached_catch_data {
+                c.clone()
+            } else {
+                self.catch_data_ref.lock().unwrap().clone()
+            }
+        };
 
         egui::CentralPanel::default().show(ctx, |ui| {
             self.shop_button_content = if self.show_side_panel {

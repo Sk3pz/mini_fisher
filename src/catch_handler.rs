@@ -38,20 +38,18 @@ pub fn reset(data: &mut CatchData) {
 }
 
 pub fn schedule(data: Arc<Mutex<CatchData>>) {
-    while data.lock().unwrap().running {
+    loop {
+        std::thread::sleep(std::time::Duration::from_millis(1000));
         let mut data = data.lock().unwrap();
+
+        if !data.running {
+            continue;
+        }
 
         if data.cast {
             data.was_turtle = false;
 
-            if data.cast_time.is_none() {
-                data.cast_time = Some(Local::now());
-            }
-
-            if data.cast_duration.is_none() {
-                data.cast_duration = Some(Duration::seconds(20));
-            }
-
+            // check if the cast has expired
             let current_elapsed = Local::now().signed_duration_since(data.cast_time.unwrap());
             let cast_duration = data.cast_duration.unwrap();
 
