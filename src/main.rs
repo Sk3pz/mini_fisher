@@ -21,9 +21,10 @@ const WEIGHT_ADD_TIME: f32 = 0.05;
 struct MiniFisher {
     title: String,
 
-    show_side_panel: bool,
-
+    show_shop: bool,
     shop_button_content: String,
+    show_bestiary: bool,
+    bestiary_button_content: String,
 
     rod_data: RodData,
     fish_data: FishData,
@@ -60,8 +61,10 @@ impl MiniFisher {
 
         Self {
             title,
-            show_side_panel: false,
+            show_shop: false,
             shop_button_content: "Shop >".to_string(),
+            show_bestiary: false,
+            bestiary_button_content: "Bestiary >".to_string(),
 
             rod_data: rod_data(),
             fish_data: fish_data(),
@@ -104,7 +107,7 @@ impl MiniFisher {
 
         catch_data.fish = Some(fish);
 
-        say!("Cast | will catch: {} | duration: {}s", catch_data.will_catch, duration);
+        //say!("Cast | will catch: {} | duration: {}s", catch_data.will_catch, duration);
     }
 
     fn exit(&mut self) {
@@ -112,7 +115,7 @@ impl MiniFisher {
         catch_data.running = false;
     }
 
-    fn generate_shop_and_theme_buttons(&mut self, ui: &mut Ui, theme_btn_text: &str) {
+    fn generate_navigation_buttons(&mut self, ui: &mut Ui, theme_btn_text: &str) {
         ui.horizontal(|ui| {
             let theme_button = ui.button(theme_btn_text).on_hover_text("Click to change theme!");
             if theme_button.clicked() {
@@ -120,7 +123,11 @@ impl MiniFisher {
             }
             let shop_button = ui.button(self.shop_button_content.clone()).on_hover_text("Click to view the shop!");
             if shop_button.clicked() {
-                self.show_side_panel = !self.show_side_panel;
+                self.show_shop = !self.show_shop;
+            }
+            let bestiary_button = ui.button(self.bestiary_button_content.clone()).on_hover_text("Click to view the bestiary!");
+            if bestiary_button.clicked() {
+                self.show_bestiary = !self.show_bestiary;
             }
         });
     }
@@ -151,19 +158,25 @@ impl eframe::App for MiniFisher {
         };
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            self.shop_button_content = if self.show_side_panel {
+            self.shop_button_content = if self.show_shop {
                 String::from("Shop >")
             } else {
                 String::from("Shop <")
             };
 
+            self.bestiary_button_content = if self.show_bestiary {
+                String::from("Bestiary >")
+            } else {
+                String::from("Bestiary <")
+            };
+
             // Show/hide side panel based on button click
-            if self.show_side_panel {
+            if self.show_shop {
                 let mut shop = Shop::load(&self.rod_data);
 
                 ui.vertical(|ui| {
                     ui.spacing_mut().item_spacing.y = 10.0;
-                    self.generate_shop_and_theme_buttons(ui, theme_btn_text);
+                    self.generate_navigation_buttons(ui, theme_btn_text);
                     let userfile = read_userfile();
                     ui.heading("Balance:");
                     ui.label(format!("${}", userfile.money));
@@ -222,62 +235,116 @@ impl eframe::App for MiniFisher {
                         });
 
                 });
-            } else { // not showing shop side panel
-                self.generate_shop_and_theme_buttons(ui, theme_btn_text);
-
-                ui.vertical_centered(|ui| {
-                    ui.heading(self.title.clone());
-
-                    ui.spacing_mut().item_spacing.y = 20.0;
-
-                    // display the image
-                    let img = if catch_data.was_turtle {
-                        egui::Image::new(egui::include_image!("../assets/turtle.png"))
-                            .max_size(Vec2::new(64.0, 64.0))
-                    } else {
-                        if self.dark_theme {
-                            if catch_data.caught {
-                                egui::Image::new(egui::include_image!("../assets/rod_with_fish.png"))
-                                    .max_size(Vec2::new(64.0, 64.0))
-                            } else {
-                                egui::Image::new(egui::include_image!("../assets/rod.png"))
-                                    .max_size(Vec2::new(64.0, 64.0))
-                            }
-                        } else {
-                            if catch_data.caught {
-                                egui::Image::new(egui::include_image!("../assets/rod_with_fish_darker.png"))
-                                    .max_size(Vec2::new(64.0, 64.0))
-                            } else {
-                                egui::Image::new(egui::include_image!("../assets/rod_darker.png"))
-                                    .max_size(Vec2::new(64.0, 64.0))
-                            }
-                        }
-                    };
-
-                    ui.add(img);
-
-                    // display the text
-                    ui.label(catch_data.display_text.clone());
-
-                    // button
-                    let fish_button = egui::Button::new(catch_data.cast_btn_txt.clone());
-                    let fish_button_ui = ui.add_enabled(!catch_data.cast, fish_button);
-                    if fish_button_ui.clicked() {
-                        self.cast_rod();
-                        self.catch_data_ref.lock().unwrap().ctx = Some(ctx.clone());
-                    }
-
-                    let rod = read_userfile().get_rod(&self.rod_data);
-
-                    add_hover_txt_mod(fish_button_ui, &rod);
-
-                    let userfile = read_userfile();
-
-                    ui.label(format!("Balance: {}", userfile.money));
-                    ui.label(format!("Fish Caught: {}", userfile.fish_caught));
-                    ui.label(format!("Unique Fish: {}/{}", userfile.has_seen.len(), self.fish_data.fish.len()));
-                });
+                return;
             }
+
+            // show/hide the bestiary
+            if self.show_bestiary {
+                let userfile = read_userfile();
+
+                ui.vertical(|ui| {
+                    ui.spacing_mut().item_spacing.y = 10.0;
+                    self.generate_navigation_buttons(ui, theme_btn_text);
+                    ui.heading("Total Fish Seen:");
+                    ui.label(format!("{}/{}", userfile.has_seen.len(), self.fish_data.fish.len()));
+                });
+
+                SidePanel::right("bestiary")
+                    .resizable(false)
+                    .show(ctx, |ui| {
+
+                        egui::ScrollArea::vertical().show(ui, |ui| {
+                            ui.vertical_centered(|ui| {
+                                ui.set_min_size(Vec2::new(325.0, 0.0));
+                                ui.spacing_mut().item_spacing.y = 10.0;
+                                ui.heading("Bestiary");
+                                ui.label("See information about fish you have caught!");
+
+                                for x in 0..userfile.has_seen.len() {
+                                    let seen = &userfile.has_seen[x];
+
+                                    egui::Frame::group(ui.style()).show(ui, |ui| {
+                                        let Some(fish) = self.fish_data.get_fish_by_name(seen) else {
+                                            ui.vertical(|ui| {
+                                                ui.heading("???");
+                                                ui.label(format!("Unknown Fish: {}", seen));
+                                            });
+                                            return;
+                                        };
+                                        ui.vertical(|ui| {
+                                            ui.heading(fish.name.clone());
+                                            ui.label(format!("Weight: {} to {}lbs, averaging around {}lbs\
+                                            \ndepth: {}ft\
+                                            \nMinimum rarity to appear: {}\
+                                            \nValue at average weight: ${}",
+                                            fish.min_weight, fish.max_weight, fish.avg_weight, fish.depth, fish.min_rarity, fish.value));
+                                        });
+                                    });
+                                }
+
+                                ctx.request_repaint();
+                            });
+                        });
+
+                    });
+                return;
+            }
+
+            // not showing a side panel
+            self.generate_navigation_buttons(ui, theme_btn_text);
+
+            ui.vertical_centered(|ui| {
+                ui.heading(self.title.clone());
+
+                ui.spacing_mut().item_spacing.y = 20.0;
+
+                // display the image
+                let img = if catch_data.was_turtle {
+                    egui::Image::new(egui::include_image!("../assets/turtle.png"))
+                        .max_size(Vec2::new(64.0, 64.0))
+                } else {
+                    if self.dark_theme {
+                        if catch_data.caught {
+                            egui::Image::new(egui::include_image!("../assets/rod_with_fish.png"))
+                                .max_size(Vec2::new(64.0, 64.0))
+                        } else {
+                            egui::Image::new(egui::include_image!("../assets/rod.png"))
+                                .max_size(Vec2::new(64.0, 64.0))
+                        }
+                    } else {
+                        if catch_data.caught {
+                            egui::Image::new(egui::include_image!("../assets/rod_with_fish_darker.png"))
+                                .max_size(Vec2::new(64.0, 64.0))
+                        } else {
+                            egui::Image::new(egui::include_image!("../assets/rod_darker.png"))
+                                .max_size(Vec2::new(64.0, 64.0))
+                        }
+                    }
+                };
+
+                ui.add(img);
+
+                // display the text
+                ui.label(catch_data.display_text.clone());
+
+                // button
+                let fish_button = egui::Button::new(catch_data.cast_btn_txt.clone());
+                let fish_button_ui = ui.add_enabled(!catch_data.cast, fish_button);
+                if fish_button_ui.clicked() {
+                    self.cast_rod();
+                    self.catch_data_ref.lock().unwrap().ctx = Some(ctx.clone());
+                }
+
+                let rod = read_userfile().get_rod(&self.rod_data);
+
+                add_hover_txt_mod(fish_button_ui, &rod);
+
+                let userfile = read_userfile();
+
+                ui.label(format!("Balance: ${}", userfile.money));
+                ui.label(format!("Fish Caught: {}", userfile.fish_caught));
+                ui.label(format!("Unique Fish: {}/{}", userfile.has_seen.len(), self.fish_data.fish.len()));
+            });
         });
     }
 }

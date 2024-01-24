@@ -3,7 +3,7 @@ use chrono::{DateTime, Duration, Local};
 use rand::{Rng, thread_rng};
 use crate::data::fish::Fish;
 use crate::data::userfile::update_userfile;
-use crate::say;
+//use crate::say;
 
 #[derive(Clone)]
 pub struct CatchData {
@@ -30,7 +30,7 @@ pub fn reset(data: &mut CatchData) {
     data.cast_time = None;
     data.cast_duration = None;
     data.cast_btn_txt = "Cast rod".to_string();
-    say!("Reeled!");
+    //say!("Reeled!");
     if let Some(ctx) = &data.ctx {
         ctx.request_repaint();
         data.ctx = None;

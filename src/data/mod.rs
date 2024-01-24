@@ -374,7 +374,7 @@ pub fn rod_data() -> RodData {
             BaseRod {
                 name: "Fiberglass Casting Rod".to_string(),
                 catch_chance: 0.35,
-                catch_rate: 20.0,
+                catch_rate: 17.2,
                 depth: 20,
                 weight_limit: 40,
                 cost: 200.0,

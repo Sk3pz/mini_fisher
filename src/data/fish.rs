@@ -160,6 +160,10 @@ impl FishData {
     pub fn get_fish_above_depth(&self, depth: u32) -> Vec<&FishType> {
         self.fish.iter().filter(|fish| fish.depth <= depth).collect()
     }
+
+    pub fn get_fish_by_name(&self, name: &str) -> Option<&FishType> {
+        self.fish.iter().find(|fish| fish.name == name)
+    }
 }
 
 #[derive(Debug, Clone)]
